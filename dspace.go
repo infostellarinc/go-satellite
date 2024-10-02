@@ -4,12 +4,12 @@ import (
 	"math"
 )
 
-// A struct returned from the dsinit function
+// Result of dsinit(...)
 type DeepSpaceInitResult struct {
 	em, argpm, inclm, mm, nm, nodem, irez, atime, d2201, d2211, d3210, d3222, d4410, d4422, d5220, d5232, d5421, d5433, dedt, didt, dmdt, dndt, dnodt, domdt, del1, del2, del3, xfact, xlamo, xli, xni float64
 }
 
-// A struct returned from the dspace function
+// Result of dspace(...)
 type DeepSpaceResult struct {
 	atime, em, argpm, inclm, xli, mm, xni, nodem, dndt, nm float64
 }

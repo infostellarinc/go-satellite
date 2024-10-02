@@ -159,15 +159,15 @@ func ECIToLookAngles(eciSat Vector3, obsCoords LatLong, obsAlt, jday float64) (l
 	top_e := -math.Sin(theta)*rx + math.Cos(theta)*ry
 	top_z := math.Cos(obsCoords.Latitude)*math.Cos(theta)*rx + math.Cos(obsCoords.Latitude)*math.Sin(theta)*ry + math.Sin(obsCoords.Latitude)*rz
 
-	lookAngles.Az = math.Atan(-top_e / top_s)
+	lookAngles.Azimuth = math.Atan(-top_e / top_s)
 	if top_s > 0 {
-		lookAngles.Az = lookAngles.Az + math.Pi
+		lookAngles.Azimuth = lookAngles.Azimuth + math.Pi
 	}
-	if lookAngles.Az < 0 {
-		lookAngles.Az = lookAngles.Az + 2*math.Pi
+	if lookAngles.Azimuth < 0 {
+		lookAngles.Azimuth = lookAngles.Azimuth + 2*math.Pi
 	}
-	lookAngles.Rg = math.Sqrt(rx*rx + ry*ry + rz*rz)
-	lookAngles.El = math.Asin(top_z / lookAngles.Rg)
+	lookAngles.Range = math.Sqrt(rx*rx + ry*ry + rz*rz)
+	lookAngles.Elevation = math.Asin(top_z / lookAngles.Range)
 
 	return
 }
