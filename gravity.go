@@ -42,7 +42,7 @@ func getGravConst(name Gravity) (GravConst, error) {
 		grav.j3oj2 = grav.j3 / grav.j2
 	case GravityWGS84:
 		grav.mu = 398600.5
-		grav.radiusearthkm = 6378.137
+		grav.radiusearthkm = EQUATOR_RADIUS
 		grav.xke = 60.0 / math.Sqrt(grav.radiusearthkm*grav.radiusearthkm*grav.radiusearthkm/grav.mu)
 		grav.tumin = 1.0 / grav.xke
 		grav.j2 = 0.00108262998905

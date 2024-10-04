@@ -20,10 +20,7 @@ func ParseTLE(line1, line2 string, gravConst Gravity) (Satellite, error) {
 	}
 
 	// LINE 1 BEGIN
-	sat.satnum, err = strconv.ParseInt(strings.TrimSpace(line1[2:7]), 10, 0)
-	if err != nil {
-		return Satellite{}, fmt.Errorf("satellite number: %w", err)
-	}
+	sat.satnum = strings.TrimSpace(line1[2:7])
 	sat.epochyr, err = strconv.ParseInt(line1[18:20], 10, 0)
 	if err != nil {
 		return Satellite{}, fmt.Errorf("epoch year: %w", err)

@@ -15,7 +15,7 @@ type DeepSpaceResult struct {
 }
 
 // this procedure provides deep space contributions to mean motion dot due to geopotential resonance with half day and one day orbits.
-func dsinit(whichconst GravConst, cosim, emsq, argpo, s1, s2, s3, s4, s5, sinim, ss1, ss2, ss3, ss4, ss5, sz1, sz3, sz11, sz13, sz21, sz23, sz31, sz33, t, tc, gsto, mo, mdot, no, nodeo, nodedot, xpidot, z1, z3, z11, z13, z21, z23, z31, z33, ecco, eccsq, em, argpm, inclm, mm, nm, nodem, irez, atime, d2201, d2211, d3210, d3222, d4410, d4422, d5220, d5232, d5421, d5433, dedt, didt, dmdt, dnodt, domdt, del1, del2, del3, xfact, xlamo, xli, xni float64) (res DeepSpaceInitResult) {
+func dsinit(whichconst GravConst, cosim, emsq, argpo, s1, s2, s3, s4, s5, sinim, ss1, ss2, ss3, ss4, ss5, sz1, sz3, sz11, sz13, sz21, sz23, sz31, sz33, t, tc, gsto, mo, mdot, no, nodeo, nodedot, xpidot, z1, z3, z11, z13, z21, z23, z31, z33, ecco, eccsq, em, argpm, inclm, mm, nm, nodem, irez, atime, d2201, d2211, d3210, d3222, d4410, d4422, d5220, d5232, d5421, d5433, dedt, didt, dmdt, dnodt, domdt, del1, del2, del3, xfact, xlamo, xli, xni float64) DeepSpaceInitResult {
 
 	var f220, f221, f311, f321, f322, f330, f441, f442, f522, f523, f542, f543, g200, g201, g211, g300, g310, g322, g410, g422, g520, g521, g532, g533, sini2, temp, temp1, theta, xno2, ainv2, aonv, cosisq, eoc float64
 
@@ -180,43 +180,44 @@ func dsinit(whichconst GravConst, cosim, emsq, argpo, s1, s2, s3, s4, s5, sinim,
 		nm = no + dndt
 	}
 
-	res.em = em
-	res.argpm = argpm
-	res.inclm = inclm
-	res.mm = mm
-	res.nm = nm
-	res.nodem = nodem
-	res.irez = irez
-	res.atime = atime
-	res.d2201 = d2201
-	res.d2211 = d2211
-	res.d3210 = d3210
-	res.d3222 = d3222
-	res.d4410 = d4410
-	res.d4422 = d4422
-	res.d5220 = d5220
-	res.d5232 = d5232
-	res.d5421 = d5421
-	res.d5433 = d5433
-	res.dedt = dedt
-	res.didt = didt
-	res.dmdt = dmdt
-	res.dndt = dndt
-	res.dnodt = dnodt
-	res.domdt = domdt
-	res.del1 = del1
-	res.del2 = del2
-	res.del3 = del3
-	res.xfact = xfact
-	res.xlamo = xlamo
-	res.xli = xli
-	res.xni = xni
+	var result DeepSpaceInitResult
+	result.em = em
+	result.argpm = argpm
+	result.inclm = inclm
+	result.mm = mm
+	result.nm = nm
+	result.nodem = nodem
+	result.irez = irez
+	result.atime = atime
+	result.d2201 = d2201
+	result.d2211 = d2211
+	result.d3210 = d3210
+	result.d3222 = d3222
+	result.d4410 = d4410
+	result.d4422 = d4422
+	result.d5220 = d5220
+	result.d5232 = d5232
+	result.d5421 = d5421
+	result.d5433 = d5433
+	result.dedt = dedt
+	result.didt = didt
+	result.dmdt = dmdt
+	result.dndt = dndt
+	result.dnodt = dnodt
+	result.domdt = domdt
+	result.del1 = del1
+	result.del2 = del2
+	result.del3 = del3
+	result.xfact = xfact
+	result.xlamo = xlamo
+	result.xli = xli
+	result.xni = xni
 
-	return
+	return result
 }
 
 // this procedure provides deep space contributions to mean elements for perturbing third body. these effects have been averaged over one revolution of the sun and moon. for earth resonance effects, the effects have been averaged over no revolutions of the satellite. (mean motion)
-func dspace(irez, d2201, d2211, d3210, d3222, d4410, d4422, d5220, d5232, d5421, d5433, dedt, del1, del2, del3, didt, dmdt, dnodt, domdt, argpo, argpdot, t, tc, gsto, xfact, xlamo, no, atime, em, argpm, inclm, xli, mm, xni, nodem, nm float64) (result DeepSpaceResult) {
+func dspace(irez, d2201, d2211, d3210, d3222, d4410, d4422, d5220, d5232, d5421, d5433, dedt, del1, del2, del3, didt, dmdt, dnodt, domdt, argpo, argpdot, t, tc, gsto, xfact, xlamo, no, atime, em, argpm, inclm, xli, mm, xni, nodem, nm float64) DeepSpaceResult {
 	var delt, ft, theta, x2li, x2omi, xl, xldot, xnddt, xndt, xomi float64
 
 	fasx2 := 0.13130908
@@ -300,6 +301,7 @@ func dspace(irez, d2201, d2211, d3210, d3222, d4410, d4422, d5220, d5232, d5421,
 		nm = no + dndt
 	}
 
+	var result DeepSpaceResult
 	result.atime = atime
 	result.em = em
 	result.argpm = argpm
@@ -311,7 +313,7 @@ func dspace(irez, d2201, d2211, d3210, d3222, d4410, d4422, d5220, d5232, d5421,
 	result.dndt = dndt
 	result.nm = nm
 
-	return
+	return result
 }
 
 // A struct returned from the dpper function
@@ -320,7 +322,7 @@ type DpperResult struct {
 }
 
 // this procedure provides deep space long period periodic contributions to the mean elements. by design, these periodics are zero at epoch. this used to be dscom which included initialization, but it's really a recurring function.
-func dpper(satrec *Satellite, inclo float64, init string, ep, inclp, nodep, argpp, mp float64, opsmode string) (result DpperResult) {
+func dpper(satrec *Satellite, inclo float64, init string, ep, inclp, nodep, argpp, mp float64, opsmode string) DpperResult {
 	e3 := satrec.e3
 	ee2 := satrec.ee2
 	peo := satrec.peo
@@ -445,13 +447,14 @@ func dpper(satrec *Satellite, inclo float64, init string, ep, inclp, nodep, argp
 		}
 	}
 
+	var result DpperResult
 	result.ep = ep
 	result.inclp = inclp
 	result.nodep = nodep
 	result.argpp = argpp
 	result.mp = mp
 
-	return
+	return result
 }
 
 // A struct returned from the dscom function
@@ -460,7 +463,7 @@ type DSComResults struct {
 }
 
 // this procedure provides deep space common items used by both the secular and periodics subroutines. input is provided as shown. this routine used to be called dpper, but the functions inside weren't well organized.
-func dscom(epoch, ep, argpp, tc, inclp, nodep, np, e3, ee2, peo, pgho, pho, pinco, plo, se2, se3, sgh2, sgh3, sgh4, sh2, sh3, si2, si3, sl2, sl3, sl4, xgh2, xgh3, xgh4, xh2, xh3, xi2, xi3, xl2, xl3, xl4, zmol, zmos float64) (res DSComResults) {
+func dscom(epoch, ep, argpp, tc, inclp, nodep, np, e3, ee2, peo, pgho, pho, pinco, plo, se2, se3, sgh2, sgh3, sgh4, sh2, sh3, si2, si3, sl2, sl3, sl4, xgh2, xgh3, xgh4, xh2, xh3, xi2, xi3, xl2, xl3, xl4, zmol, zmos float64) DSComResults {
 	var a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, betasq, cc, ctem, stem, x1, x2, x3, x4, x5, x6, x7, x8, xnodce, xnoi, zcosg, zsing, zcosgl, zsingl, zcosh, zsinh, zcoshl, zsinhl, zcosi, zsini, zcosil, zsinil, zx, zy, ss1, ss2, ss3, ss4, ss5, ss6, ss7, sz1, sz2, sz3, sz11, sz12, sz13, sz21, sz22, sz23, sz31, sz32, sz33, s1, s2, s3, s4, s5, s6, s7, z1, z2, z3, z11, z12, z13, z21, z22, z23, z31, z32, z33 float64
 
 	zes := 0.01675
@@ -617,87 +620,88 @@ func dscom(epoch, ep, argpp, tc, inclp, nodep, np, e3, ee2, peo, pgho, pho, pinc
 	xh2 = -2.0 * s2 * z22
 	xh3 = -2.0 * s2 * (z23 - z21)
 
-	res.snodm = snodm
-	res.cnodm = cnodm
-	res.sinim = sinim
-	res.cosim = cosim
-	res.sinomm = sinomm
-	res.cosomm = cosomm
-	res.day = day
-	res.e3 = e3
-	res.ee2 = ee2
-	res.em = em
-	res.emsq = emsq
-	res.gam = gam
-	res.peo = peo
-	res.pgho = pgho
-	res.pho = pho
-	res.pinco = pinco
-	res.plo = plo
-	res.rtemsq = rtemsq
-	res.se2 = se2
-	res.se3 = se3
-	res.sgh2 = sgh2
-	res.sgh3 = sgh3
-	res.sgh4 = sgh4
-	res.sh2 = sh2
-	res.sh3 = sh3
-	res.si2 = si2
-	res.si3 = si3
-	res.sl2 = sl2
-	res.sl3 = sl3
-	res.sl4 = sl4
-	res.s1 = s1
-	res.s2 = s2
-	res.s3 = s3
-	res.s4 = s4
-	res.s5 = s5
-	res.s6 = s6
-	res.s7 = s7
-	res.ss1 = ss1
-	res.ss2 = ss2
-	res.ss3 = ss3
-	res.ss4 = ss4
-	res.ss5 = ss5
-	res.ss6 = ss6
-	res.ss7 = ss7
-	res.sz1 = sz1
-	res.sz2 = sz2
-	res.sz3 = sz3
-	res.sz11 = sz11
-	res.sz12 = sz12
-	res.sz13 = sz13
-	res.sz21 = sz21
-	res.sz22 = sz22
-	res.sz23 = sz23
-	res.sz31 = sz31
-	res.sz32 = sz32
-	res.sz33 = sz33
-	res.xgh2 = xgh2
-	res.xgh3 = xgh3
-	res.xgh4 = xgh4
-	res.xh2 = xh2
-	res.xh3 = xh3
-	res.xi2 = xi2
-	res.xi3 = xi3
-	res.xl2 = xl2
-	res.xl3 = xl3
-	res.xl4 = xl4
-	res.nm = nm
-	res.z1 = z1
-	res.z2 = z2
-	res.z3 = z3
-	res.z11 = z11
-	res.z12 = z12
-	res.z13 = z13
-	res.z21 = z21
-	res.z22 = z22
-	res.z23 = z23
-	res.z31 = z31
-	res.z32 = z32
-	res.z33 = z33
-	res.zmol = zmol
-	res.zmos = zmos
+	var result DSComResults
+	result.snodm = snodm
+	result.cnodm = cnodm
+	result.sinim = sinim
+	result.cosim = cosim
+	result.sinomm = sinomm
+	result.cosomm = cosomm
+	result.day = day
+	result.e3 = e3
+	result.ee2 = ee2
+	result.em = em
+	result.emsq = emsq
+	result.gam = gam
+	result.peo = peo
+	result.pgho = pgho
+	result.pho = pho
+	result.pinco = pinco
+	result.plo = plo
+	result.rtemsq = rtemsq
+	result.se2 = se2
+	result.se3 = se3
+	result.sgh2 = sgh2
+	result.sgh3 = sgh3
+	result.sgh4 = sgh4
+	result.sh2 = sh2
+	result.sh3 = sh3
+	result.si2 = si2
+	result.si3 = si3
+	result.sl2 = sl2
+	result.sl3 = sl3
+	result.sl4 = sl4
+	result.s1 = s1
+	result.s2 = s2
+	result.s3 = s3
+	result.s4 = s4
+	result.s5 = s5
+	result.s6 = s6
+	result.s7 = s7
+	result.ss1 = ss1
+	result.ss2 = ss2
+	result.ss3 = ss3
+	result.ss4 = ss4
+	result.ss5 = ss5
+	result.ss6 = ss6
+	result.ss7 = ss7
+	result.sz1 = sz1
+	result.sz2 = sz2
+	result.sz3 = sz3
+	result.sz11 = sz11
+	result.sz12 = sz12
+	result.sz13 = sz13
+	result.sz21 = sz21
+	result.sz22 = sz22
+	result.sz23 = sz23
+	result.sz31 = sz31
+	result.sz32 = sz32
+	result.sz33 = sz33
+	result.xgh2 = xgh2
+	result.xgh3 = xgh3
+	result.xgh4 = xgh4
+	result.xh2 = xh2
+	result.xh3 = xh3
+	result.xi2 = xi2
+	result.xi3 = xi3
+	result.xl2 = xl2
+	result.xl3 = xl3
+	result.xl4 = xl4
+	result.nm = nm
+	result.z1 = z1
+	result.z2 = z2
+	result.z3 = z3
+	result.z11 = z11
+	result.z12 = z12
+	result.z13 = z13
+	result.z21 = z21
+	result.z22 = z22
+	result.z23 = z23
+	result.z31 = z31
+	result.z32 = z32
+	result.z33 = z33
+	result.zmol = zmol
+	result.zmos = zmos
 
-	return
+	return result
 }

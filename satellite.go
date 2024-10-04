@@ -5,7 +5,7 @@ type Satellite struct {
 	Line1 string `json:"TLE_LINE1"`
 	Line2 string `json:"TLE_LINE2"`
 
-	satnum int64
+	satnum string
 
 	Error      int64
 	ErrorStr   string
