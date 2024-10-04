@@ -1,7 +1,7 @@
 package satellite
 
 import (
-	"log"
+	"errors"
 	"math"
 )
 
@@ -95,8 +95,10 @@ func ECIToLLA(eciCoords Vector3, gmst float64) (altitude, velocity float64, ret 
 	return
 }
 
-// Convert LatLong in radians to LatLong in degrees
-func LatLongDeg(rad LatLong) LatLong {
+var ErrInvalidLatitude = errors.New("latitude not within bounds -pi/2 to +pi/2")
+
+// Convert LatLong in radians to LatLong in degrees.
+func LatLongDeg(rad LatLong) (LatLong, error) {
 	var result LatLong
 	result.Longitude = math.Mod(rad.Longitude/math.Pi*180, 360)
 	if result.Longitude > 180 {
@@ -106,10 +108,10 @@ func LatLongDeg(rad LatLong) LatLong {
 	}
 
 	if rad.Latitude < (-math.Pi/2) || rad.Latitude > math.Pi/2 {
-		log.Fatal("Latitude not within bounds -pi/2 to +pi/2")
+		return LatLong{}, ErrInvalidLatitude
 	}
 	result.Latitude = (rad.Latitude / math.Pi * 180)
-	return result
+	return result, nil
 }
 
 // Calculate GMST from Julian date.
