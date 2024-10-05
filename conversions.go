@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+var ErrInvalidLatitude = errors.New("latitude not within bounds -pi/2 to +pi/2")
+
 // this procedure converts the day of the year, epochDays, to the equivalent month day, hour, minute and second.
 func days2mdhms(year int64, epochDays float64) (float64, float64, float64, float64, float64) {
 	lmonth := [12]int{31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
@@ -123,8 +125,6 @@ func ECIToLLA(eciCoords Vector3, gmst float64) (velocity float64, ret Coordinate
 
 	return
 }
-
-var ErrInvalidLatitude = errors.New("latitude not within bounds -pi/2 to +pi/2")
 
 // Convert LatLong in radians to LatLong in degrees.
 func LatLongDeg(rad Coordinates) (Coordinates, error) {

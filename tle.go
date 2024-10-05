@@ -2,8 +2,10 @@ package satellite
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type TLE struct {
@@ -28,6 +30,43 @@ type TLE struct {
 	MeanMotion                    float64
 
 	OrbitNumberAtEpoch int64
+}
+
+// Returns the current time in UTC
+// This is a variable so it can be mocked in tests
+var Now = func() time.Time {
+	return time.Now().UTC()
+}
+
+func (t TLE) EpochTime() time.Time {
+	currFullYear := Now().Year()
+	currYear := currFullYear % 100
+	var year int
+	// NOTE:
+	// +4 lets us represent TLEs 4 years into the future (likely inaccurate)
+	// the trade off is you how old of a TLE you can read in
+	// if we need to parse a TLE much further out than 4 years then we need to tweak this
+	if int(t.EpochYear) <= currYear+4 {
+		year = (currFullYear - currYear) + int(t.EpochYear)
+	} else {
+		year = (currFullYear - currYear - 100) + int(t.EpochYear)
+	}
+
+	days, fractionalDays := math.Modf(t.EpochDay)
+
+	hours, fractionalHours := math.Modf(24 * fractionalDays)
+
+	minutes, fractionalMinutes := math.Modf(60 * fractionalHours)
+	seconds, fractionalSeconds := math.Modf(60 * fractionalMinutes)
+	milliseconds := 1000 * fractionalSeconds
+	result := time.Date(year, 1, 0, 0, 0, 0, 0, time.UTC)
+	result = result.Add(time.Duration(days) * (24 * time.Hour))
+	result = result.Add(time.Duration(hours) * time.Hour)
+	result = result.Add(time.Duration(minutes) * time.Minute)
+	result = result.Add(time.Duration(seconds) * time.Second)
+	result = result.Add(time.Duration(milliseconds) * time.Millisecond)
+
+	return result
 }
 
 // Parses a two line element dataset into a Satellite struct
