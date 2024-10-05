@@ -1,3 +1,3 @@
-module github.com/joshuaferrara/go-satellite
+module github.com/jamiecrisman/go-satellite
 
-go 1.23
+go 1.22

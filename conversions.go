@@ -3,6 +3,7 @@ package satellite
 import (
 	"errors"
 	"math"
+	"time"
 )
 
 // this procedure converts the day of the year, epochDays, to the equivalent month day, hour, minute and second.
@@ -37,10 +38,24 @@ func days2mdhms(year int64, epochDays float64) (float64, float64, float64, float
 	return month, day, hour, minute, second
 }
 
+func JDayTime(date time.Time) float64 {
+	year, month, day := date.Date()
+	hour, minute, second := date.Clock()
+	jDay := JDay(year, int(month), day, hour, minute, float64(second))
+	return jDay
+}
+
 // Calc julian date given year, month, day, hour, minute and second
 // the julian date is defined by each elapsed day since noon, jan 1, 4713 bc.
-func JDay(year, month, day, hour, minute, second int) float64 {
-	return (367.0*float64(year) - math.Floor((7*(float64(year)+math.Floor((float64(month)+9)/12.0)))*0.25) + math.Floor(275*float64(month)/9.0) + float64(day) + 1721013.5 + ((float64(second)/60.0+float64(minute))/60.0+float64(hour))/24.0)
+func JDay(year, month, day, hour, minute int, second float64) float64 {
+	fyear := float64(year)
+	fmonth := float64(month)
+	fday := float64(day)
+	fhour := float64(hour)
+	fminute := float64(minute)
+	jd := (367.0*fyear - math.Floor(7*(fyear+math.Floor((fmonth+9)/12.0))*0.25) + math.Floor(275*fmonth/9.0) + fday + 1721013.5)
+	fr := (second + fminute*60.0 + fhour*3600.0) / 86400.0
+	return jd + fr
 }
 
 // this function finds the greenwich sidereal time (iau-82).
@@ -57,14 +72,27 @@ func gstime(jdut1 float64) float64 {
 }
 
 // Calc GST given year, month, day, hour, minute and second.
-func GSTimeFromDate(year, month, day, hour, minute, second int) float64 {
-	jDay := JDay(year, month, day, hour, minute, second)
+func GSTimeFromDate(date time.Time) float64 {
+	jDay := JDayTime(date)
 	return gstime(jDay)
+}
+
+// Holds latitude and Longitude in either degrees or radians
+type Coordinates struct {
+	Latitude  float64
+	Longitude float64
+	Altitude  float64
+}
+
+type LookAngles struct {
+	Azimuth   float64
+	Elevation float64
+	Range     float64
 }
 
 // Convert Earth Centered Inertial coordinated into equivalent latitude, longitude, altitude and velocity.
 // Reference: http://celestrak.com/columns/v02n03/
-func ECIToLLA(eciCoords Vector3, gmst float64) (altitude, velocity float64, ret LatLong) {
+func ECIToLLA(eciCoords Vector3, gmst float64) (velocity float64, ret Coordinates) {
 	a := EQUATOR_RADIUS // Semi-major Axis
 	b := POLAR_RADIUS   // Semi-minor Axis
 	f := (a - b) / a    // Flattening
@@ -78,19 +106,20 @@ func ECIToLLA(eciCoords Vector3, gmst float64) (altitude, velocity float64, ret 
 
 	// Oblate Earth Fix
 	c := 0.0
-	for _ = range 20 {
+	for range 20 {
 		c = 1 / math.Sqrt(1-e2*(math.Sin(latitude)*math.Sin(latitude)))
 		latitude = math.Atan2(eciCoords.Z+(a*c*e2*math.Sin(latitude)), sqx2y2)
 	}
 
 	// Calc Alt
-	altitude = (sqx2y2 / math.Cos(latitude)) - (a * c)
+	altitude := (sqx2y2 / math.Cos(latitude)) - (a * c)
 
 	// Orbital Speed ≈ sqrt(μ / r) where μ = std. gravitaional parameter
 	velocity = math.Sqrt(GRAVITY_EARTH / (altitude + EQUATOR_RADIUS))
 
 	ret.Latitude = latitude
 	ret.Longitude = longitude
+	ret.Altitude = altitude
 
 	return
 }
@@ -98,8 +127,8 @@ func ECIToLLA(eciCoords Vector3, gmst float64) (altitude, velocity float64, ret 
 var ErrInvalidLatitude = errors.New("latitude not within bounds -pi/2 to +pi/2")
 
 // Convert LatLong in radians to LatLong in degrees.
-func LatLongDeg(rad LatLong) (LatLong, error) {
-	var result LatLong
+func LatLongDeg(rad Coordinates) (Coordinates, error) {
+	var result Coordinates
 	result.Longitude = math.Mod(rad.Longitude/math.Pi*180, 360)
 	if result.Longitude > 180 {
 		result.Longitude = 360 - result.Longitude
@@ -108,7 +137,7 @@ func LatLongDeg(rad LatLong) (LatLong, error) {
 	}
 
 	if rad.Latitude < (-math.Pi/2) || rad.Latitude > math.Pi/2 {
-		return LatLong{}, ErrInvalidLatitude
+		return Coordinates{}, ErrInvalidLatitude
 	}
 	result.Latitude = (rad.Latitude / math.Pi * 180)
 	return result, nil
@@ -128,14 +157,19 @@ func ThetaGJD(jday float64) float64 {
 
 // Convert latitude, longitude and altitude(km) into equivalent Earth Centered Intertial coordinates(km)
 // Reference: The 1992 Astronomical Almanac, page K11.
-func LLAToECI(obsCoords LatLong, alt, jday float64) Vector3 {
-	re := EQUATOR_RADIUS
+func LLAToECI(obsCoords Coordinates, jday float64, grav GravConst) Vector3 {
 	theta := math.Mod(ThetaGJD(jday)+obsCoords.Longitude, TWOPI)
-	r := (re + alt) * math.Cos(obsCoords.Latitude)
 	var eciObs Vector3
-	eciObs.X = r * math.Cos(theta)
-	eciObs.Y = r * math.Sin(theta)
-	eciObs.Z = (re + alt) * math.Sin(obsCoords.Latitude)
+	latSin := math.Sin(obsCoords.Latitude)
+	latCos := math.Cos(obsCoords.Latitude)
+	c := 1 / math.Sqrt(1+grav.flattening*(grav.flattening-2)*latSin*latSin)
+	sq := c * (1 - grav.flattening) * (1 - grav.flattening)
+	achcp := (grav.radiusearthkm*c + obsCoords.Altitude) * latCos
+
+	eciObs.X = achcp * math.Cos(theta)
+	eciObs.Y = achcp * math.Sin(theta)
+	eciObs.Z = (grav.radiusearthkm*sq + obsCoords.Altitude) * latSin
+
 	return eciObs
 }
 
@@ -152,17 +186,22 @@ func ECIToECEF(eciCoords Vector3, gmst float64) Vector3 {
 // Calculate look angles for given satellite position and observer position
 // obsAlt in km
 // Reference: http://celestrak.com/columns/v02n02/
-func ECIToLookAngles(eciSat Vector3, obsCoords LatLong, obsAlt, jday float64) LookAngles {
+func ECIToLookAngles(eciSat Vector3, obsCoords Coordinates, jday float64, grav GravConst) LookAngles {
 	theta := math.Mod(ThetaGJD(jday)+obsCoords.Longitude, TWOPI)
-	obsPos := LLAToECI(obsCoords, obsAlt, jday)
+	obsPos := LLAToECI(obsCoords, jday, grav)
 
 	rx := eciSat.X - obsPos.X
 	ry := eciSat.Y - obsPos.Y
 	rz := eciSat.Z - obsPos.Z
 
-	topS := math.Sin(obsCoords.Latitude)*math.Cos(theta)*rx + math.Sin(obsCoords.Latitude)*math.Sin(theta)*ry - math.Cos(obsCoords.Latitude)*rz
-	topE := -math.Sin(theta)*rx + math.Cos(theta)*ry
-	topZ := math.Cos(obsCoords.Latitude)*math.Cos(theta)*rx + math.Cos(obsCoords.Latitude)*math.Sin(theta)*ry + math.Sin(obsCoords.Latitude)*rz
+	latSin := math.Sin(obsCoords.Latitude)
+	latCos := math.Cos(obsCoords.Latitude)
+	thetaSin := math.Sin(theta)
+	thetaCos := math.Cos(theta)
+
+	topS := latSin*thetaCos*rx + latSin*thetaSin*ry - latCos*rz
+	topE := -thetaSin*rx + thetaCos*ry
+	topZ := latCos*thetaCos*rx + latCos*thetaSin*ry + latSin*rz
 
 	var lookAngles LookAngles
 	lookAngles.Azimuth = math.Atan(-topE / topS)

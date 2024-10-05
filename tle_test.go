@@ -86,7 +86,7 @@ func TestParseTLE(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			sat, err := ParseTLE(test.line1, test.line2, test.gravConst)
+			tle, err := ParseTLE(test.line1, test.line2, test.gravConst)
 			if err == nil && test.expectedErr != nil {
 				t.Fatalf("expected error %v, got nil", test.expectedErr)
 			}
@@ -96,41 +96,41 @@ func TestParseTLE(t *testing.T) {
 			if err != nil && test.expectedErr != nil && !errors.Is(err, test.expectedErr) {
 				t.Fatalf("expected error %v, got %v", test.expectedErr, err)
 			}
-			if sat.satnum != test.satNum {
-				t.Fatalf("expected satnum %s, got %s", test.satNum, sat.satnum)
+			if tle.CatalogNumber != test.satNum {
+				t.Fatalf("expected satnum %s, got %s", test.satNum, tle.CatalogNumber)
 			}
-			if sat.epochyr != test.epochyr {
-				t.Fatalf("expected epochyr %d, got %d", test.epochyr, sat.epochyr)
+			if tle.EpochYear != test.epochyr {
+				t.Fatalf("expected epochyr %d, got %d", test.epochyr, tle.EpochYear)
 			}
-			if sat.epochdays != test.epochdays {
-				t.Fatalf("expected epochdays %f, got %f", test.epochdays, sat.epochdays)
+			if tle.EpochDay != test.epochdays {
+				t.Fatalf("expected epochdays %f, got %f", test.epochdays, tle.EpochDay)
 			}
-			if sat.ndot != test.ndot {
-				t.Fatalf("expected ndot %f, got %f", test.ndot, sat.ndot)
+			if tle.FirstTimeDerivativeOfMeanMotion != test.ndot {
+				t.Fatalf("expected ndot %f, got %f", test.ndot, tle.FirstTimeDerivativeOfMeanMotion)
 			}
-			if sat.nddot != test.nddot {
-				t.Fatalf("expected nddot %f, got %f", test.nddot, sat.nddot)
+			if tle.SecondTimeDerivativeOfMeanMotion != test.nddot {
+				t.Fatalf("expected nddot %f, got %f", test.nddot, tle.SecondTimeDerivativeOfMeanMotion)
 			}
-			if sat.bstar != test.bstar {
-				t.Fatalf("expected bstar %f, got %f", test.bstar, sat.bstar)
+			if tle.BStar != test.bstar {
+				t.Fatalf("expected bstar %f, got %f", test.bstar, tle.BStar)
 			}
-			if sat.inclo != test.inclo {
-				t.Fatalf("expected inclo %f, got %f", test.inclo, sat.inclo)
+			if tle.Inclination != test.inclo {
+				t.Fatalf("expected inclo %f, got %f", test.inclo, tle.Inclination)
 			}
-			if sat.nodeo != test.nodeo {
-				t.Fatalf("expected nodeo %f, got %f", test.nodeo, sat.nodeo)
+			if tle.RightAscensionOfAscendingNode != test.nodeo {
+				t.Fatalf("expected nodeo %f, got %f", test.nodeo, tle.RightAscensionOfAscendingNode)
 			}
-			if sat.ecco != test.ecco {
-				t.Fatalf("expected ecco %f, got %f", test.ecco, sat.ecco)
+			if tle.Eccentricity != test.ecco {
+				t.Fatalf("expected ecco %f, got %f", test.ecco, tle.Eccentricity)
 			}
-			if sat.argpo != test.argpo {
-				t.Fatalf("expected argpo %f, got %f", test.argpo, sat.argpo)
+			if tle.ArgumentOfPerigee != test.argpo {
+				t.Fatalf("expected argpo %f, got %f", test.argpo, tle.ArgumentOfPerigee)
 			}
-			if sat.mo != test.mo {
-				t.Fatalf("expected mo %f, got %f", test.mo, sat.mo)
+			if tle.MeanAnomaly != test.mo {
+				t.Fatalf("expected mo %f, got %f", test.mo, tle.MeanAnomaly)
 			}
-			if sat.no != test.no {
-				t.Fatalf("expected no %f, got %f", test.no, sat.no)
+			if tle.MeanMotion != test.no {
+				t.Fatalf("expected no %f, got %f", test.no, tle.MeanMotion)
 			}
 		})
 	}

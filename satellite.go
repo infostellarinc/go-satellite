@@ -2,14 +2,9 @@ package satellite
 
 // Struct for holding satellite information during and before propagation
 type Satellite struct {
-	Line1 string `json:"TLE_LINE1"`
-	Line2 string `json:"TLE_LINE2"`
+	tle TLE
 
-	satnum string
-
-	Error      int64
-	ErrorStr   string
-	whichconst GravConst
+	gravity GravConst
 
 	epochyr    int64
 	epochdays  float64
@@ -24,8 +19,6 @@ type Satellite struct {
 	argpo float64
 	mo    float64
 	no    float64
-	alta  float64
-	altp  float64
 
 	method        string
 	operationmode string

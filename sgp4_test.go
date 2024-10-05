@@ -218,7 +218,10 @@ func TestPropagation(t *testing.T) {
 				theoPos := Vector3{X: posX, Y: posY, Z: posZ}
 				theoVel := Vector3{X: velX, Y: velY, Z: velZ}
 
-				expPos, expVel := sgp4(&sat, theoretical[0])
+				expPos, expVel, err := sgp4(&sat, theoretical[0])
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
 				if !expPos.Equals(theoPos) {
 					t.Fatalf("expected position %v, got %v", theoPos, expPos)
 				}

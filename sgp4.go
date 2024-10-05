@@ -1,11 +1,32 @@
 package satellite
 
 import (
+	"errors"
+	"fmt"
 	"math"
+	"time"
 )
 
+var ErrInvalidMeanEccentricity = errors.New("mean eccentricity is not within range 0 <= e < 1")
+var ErrInvalidMeanMotion = errors.New("mean motion is less than 0")
+var ErrInvalidPertubedEccentricity = errors.New("perturbed eccentricity is not within range 0 <= e < 1")
+var ErrInvalidSemilatusRectum = errors.New("semilatus rectum is less than 0")
+var ErrSatelliteDecay = errors.New("mrt is less than 1.0 indicating decay")
+
+type Vector3 struct {
+	X, Y, Z float64
+}
+
+func (v Vector3) Equals(v2 Vector3) bool {
+	return closeFloat(v.X, v2.X) && closeFloat(v.Y, v2.Y) && closeFloat(v.Z, v2.Z)
+}
+
+func closeFloat(a, b float64) bool {
+	return math.Abs(a-b) < 1e-4
+}
+
 // this procedure initializes variables for sgp4.
-func sgp4init(opsmode *string, epoch float64, satrec *Satellite) (position, velocity Vector3) {
+func sgp4init(epoch float64, satrec *Satellite) (position, velocity Vector3, err error) {
 	var cc1sq, cc2, cc3, coef, coef1, cosio4, eeta, etasq, perige, pinvsq, psisq, qzms24, sfour, temp, temp1, temp2, temp3, temp4, tsi, xhdot1 float64
 
 	// Deep space vars
@@ -14,10 +35,10 @@ func sgp4init(opsmode *string, epoch float64, satrec *Satellite) (position, velo
 	satrec.method = "n"
 	satrec.operationmode = "i"
 
-	radiusearthkm := satrec.whichconst.radiusearthkm
-	j2 := satrec.whichconst.j2
-	j4 := satrec.whichconst.j4
-	j3oj2 := satrec.whichconst.j3oj2
+	radiusearthkm := satrec.gravity.radiusearthkm
+	j2 := satrec.gravity.j2
+	j4 := satrec.gravity.j4
+	j3oj2 := satrec.gravity.j3oj2
 
 	ss := 78.0/radiusearthkm + 1.0
 	qzms2ttemp := (120.0 - 78.0) / radiusearthkm
@@ -27,13 +48,11 @@ func sgp4init(opsmode *string, epoch float64, satrec *Satellite) (position, velo
 	satrec.init = "y"
 	satrec.t = 0.0
 
-	var _, no, ao, con41, con42, cosio, cosio2, eccsq, omeosq, posq, rp, rteosq, sinio, gsto = initl(satrec.whichconst, satrec.ecco, epoch, satrec.inclo, satrec.no, satrec.method, satrec.operationmode)
+	var _, no, ao, con41, con42, cosio, cosio2, eccsq, omeosq, posq, rp, rteosq, sinio, gsto = initl(satrec.gravity, satrec.ecco, epoch, satrec.inclo, satrec.no, satrec.method, satrec.operationmode)
 
 	satrec.no = no
 	satrec.con41 = con41
 	satrec.gsto = gsto
-
-	satrec.Error = 0
 
 	if omeosq >= 0.0 || satrec.no >= 0.0 {
 		satrec.isimp = 0
@@ -192,7 +211,7 @@ func sgp4init(opsmode *string, epoch float64, satrec *Satellite) (position, velo
 			nodem = 0.0
 			mm = 0.0
 
-			dsinitResults := dsinit(satrec.whichconst, cosim, emsq, satrec.argpo, s1, s2, s3, s4, s5, sinim, ss1, ss2, ss3, ss4, ss5, sz1, sz3, sz11, sz13, sz21, sz23, sz31, sz33, satrec.t, tc, satrec.gsto, satrec.mo, satrec.mdot, satrec.no, satrec.nodeo, satrec.nodedot, xpidot, z1, z3, z11, z13, z21, z23, z31, z33, satrec.ecco, eccsq, em, argpm, inclm, mm, nm, nodem, satrec.irez, satrec.atime, satrec.d2201, satrec.d2211, satrec.d3210, satrec.d3222, satrec.d4410, satrec.d4422, satrec.d5220, satrec.d5232, satrec.d5421, satrec.d5433, satrec.dedt, satrec.didt, satrec.dmdt, satrec.dnodt, satrec.domdt, satrec.del1, satrec.del2, satrec.del3, satrec.xfact, satrec.xlamo, satrec.xli, satrec.xni)
+			dsinitResults := dsinit(satrec.gravity, cosim, emsq, satrec.argpo, s1, s2, s3, s4, s5, sinim, ss1, ss2, ss3, ss4, ss5, sz1, sz3, sz11, sz13, sz21, sz23, sz31, sz33, satrec.t, tc, satrec.gsto, satrec.mo, satrec.mdot, satrec.no, satrec.nodeo, satrec.nodedot, xpidot, z1, z3, z11, z13, z21, z23, z31, z33, satrec.ecco, eccsq, em, argpm, inclm, mm, nm, nodem, satrec.irez, satrec.atime, satrec.d2201, satrec.d2211, satrec.d3210, satrec.d3222, satrec.d4410, satrec.d4422, satrec.d5220, satrec.d5232, satrec.d5421, satrec.d5433, satrec.dedt, satrec.didt, satrec.dmdt, satrec.dnodt, satrec.domdt, satrec.del1, satrec.del2, satrec.del3, satrec.xfact, satrec.xlamo, satrec.xli, satrec.xni)
 
 			em = dsinitResults.em
 			argpm = dsinitResults.argpm
@@ -238,7 +257,7 @@ func sgp4init(opsmode *string, epoch float64, satrec *Satellite) (position, velo
 		}
 	}
 
-	position, velocity = sgp4(satrec, 0.0)
+	position, velocity, err = sgp4(satrec, 0.0)
 	satrec.init = "n"
 
 	return
@@ -292,32 +311,32 @@ func initl(grav GravConst, ecco, epoch, inclo, noIn float64, methodIn, opsmode s
 }
 
 // Calculates position and velocity vectors for given time
-func Propagate(sat Satellite, year int, month int, day, hours, minutes, seconds int) (position, velocity Vector3) {
-	j := JDay(year, month, day, hours, minutes, seconds)
-	m := (j - sat.jdsatepoch) * 1440
-	return sgp4(&sat, m)
+func Propagate(sat Satellite, date time.Time) (position, velocity Vector3, err error) {
+	j := JDayTime(date)
+	timeSince := (j - sat.jdsatepoch) * 1440
+	return sgp4(&sat, timeSince)
 }
 
 // this procedure is the sgp4 prediction model from space command. this is an updated and combined version of sgp4 and sdp4, which were originally published separately in spacetrack report #3. this version follows the methodology from the aiaa paper (2006) describing the history and development of the code.
 // satrec - initialized Satellite struct from sgp4init
 // tsince - time since epoch in minutes
-func sgp4(satrec *Satellite, tsince float64) (position, velocity Vector3) {
+func sgp4(satrec *Satellite, tsince float64) (Vector3, Vector3, error) {
 	var am, axnl, aynl, betal, cosim, sinim, cnod, snod, cos2u, sin2u, coseo1, sineo1, cosi, sini, cosip, sinip, cosisq, cossu, sinsu, cosu, sinu, delm, delomg, emsq, ecose, el2, eo1, esine, argpm, argpp, pl, rdotl, rl, rvdot, rvdotl, su, t2, t3, t4, tc, tem5, temp, temp1, temp2, tempa, tempe, templ, u, ux, uy, uz, vx, vy, vz, inclm, mm, nm, nodem, xinc, xincp, xl, xlm, mp, xmdf, xmx, xmy, nodedf, xnode, nodep, mrt float64
+
+	var position, velocity Vector3
 
 	mrt = 0.0
 	temp4 := 1.5e-12
 	x2o3 := 2.0 / 3.0
 
-	radiusearthkm := satrec.whichconst.radiusearthkm
-	xke := satrec.whichconst.xke
-	j2 := satrec.whichconst.j2
-	j3oj2 := satrec.whichconst.j3oj2
+	radiusearthkm := satrec.gravity.radiusearthkm
+	xke := satrec.gravity.xke
+	j2 := satrec.gravity.j2
+	j3oj2 := satrec.gravity.j3oj2
 
 	vkmpersec := radiusearthkm * xke / 60.0
 
 	satrec.t = tsince
-	satrec.Error = 0
-	// TODO: satrec.Error_message    = nil
 
 	xmdf = satrec.mo + satrec.mdot*satrec.t
 	var argpdf = satrec.argpo + satrec.argpdot*satrec.t
@@ -362,8 +381,7 @@ func sgp4(satrec *Satellite, tsince float64) (position, velocity Vector3) {
 	}
 
 	if nm < 0.0 {
-		satrec.Error = 2
-		satrec.ErrorStr = ("Mean motion is less than zero")
+		return position, velocity, fmt.Errorf("%w: mean motion is %f", ErrInvalidMeanMotion, nm)
 	}
 
 	am = math.Pow((xke/nm), x2o3) * tempa * tempa
@@ -371,8 +389,7 @@ func sgp4(satrec *Satellite, tsince float64) (position, velocity Vector3) {
 	em = em - tempe
 
 	if em >= 1.0 || em < -0.001 {
-		satrec.Error = 1
-		satrec.ErrorStr = ("mean eccentricity not within range 0.0 <= e < 1.0")
+		return position, velocity, fmt.Errorf("%w: mean eccentricity is %f", ErrInvalidMeanEccentricity, em)
 	}
 
 	if em < 1.0e-6 {
@@ -415,12 +432,9 @@ func sgp4(satrec *Satellite, tsince float64) (position, velocity Vector3) {
 		}
 
 		if ep < 0.0 || ep > 1.0 {
-			satrec.Error = 3
-			satrec.ErrorStr = ("perturbed eccentricity not within range 0.0 <= e <= 1.0")
+			return position, velocity, fmt.Errorf("%w: perturbed eccentricity is %f", ErrInvalidPertubedEccentricity, ep)
 		}
-	}
 
-	if satrec.method == "d" {
 		sinip = math.Sin(xincp)
 		cosip = math.Cos(xincp)
 		satrec.aycof = -0.5 * j3oj2 * sinip
@@ -463,67 +477,64 @@ func sgp4(satrec *Satellite, tsince float64) (position, velocity Vector3) {
 	pl = am * (1.0 - el2)
 
 	if pl < 0.0 {
-		satrec.Error = 4
-		satrec.ErrorStr = ("semilatus rectum is less than zero")
-	} else {
-		rl = am * (1.0 - ecose)
-		rdotl = math.Sqrt(am) * esine / rl
-		rvdotl = math.Sqrt(pl) / rl
-		betal = math.Sqrt(1.0 - el2)
-		temp = esine / (1.0 + betal)
-		sinu = am / rl * (sineo1 - aynl - axnl*temp)
-		cosu = am / rl * (coseo1 - axnl + aynl*temp)
-		su = math.Atan2(sinu, cosu)
-		sin2u = (cosu + cosu) * sinu
-		cos2u = 1.0 - 2.0*sinu*sinu
-		temp = 1.0 / pl
-		temp1 = 0.5 * j2 * temp
-		temp2 = temp1 * temp
-
-		if satrec.method == "d" {
-			cosisq = cosip * cosip
-			satrec.con41 = 3.0*cosisq - 1.0
-			satrec.x1mth2 = 1.0 - cosisq
-			satrec.x7thm1 = 7.0*cosisq - 1.0
-		}
-
-		mrt = rl*(1.0-1.5*temp2*betal*satrec.con41) + 0.5*temp1*satrec.x1mth2*cos2u
-		su = su - 0.25*temp2*satrec.x7thm1*sin2u
-		xnode = nodep + 1.5*temp2*cosip*sin2u
-		xinc = xincp + 1.5*temp2*cosip*sinip*cos2u
-		mvt := rdotl - nm*temp1*satrec.x1mth2*sin2u/xke
-		rvdot = rvdotl + nm*temp1*(satrec.x1mth2*cos2u+1.5*satrec.con41)/xke
-
-		sinsu = math.Sin(su)
-		cossu = math.Cos(su)
-		snod = math.Sin(xnode)
-		cnod = math.Cos(xnode)
-		sini = math.Sin(xinc)
-		cosi = math.Cos(xinc)
-		xmx = -snod * cosi
-		xmy = cnod * cosi
-		ux = xmx*sinsu + cnod*cossu
-		uy = xmy*sinsu + snod*cossu
-		uz = sini * sinsu
-		vx = xmx*cossu - cnod*sinsu
-		vy = xmy*cossu - snod*sinsu
-		vz = sini * cossu
-
-		_mr := mrt * radiusearthkm
-
-		position.X = _mr * ux
-		position.Y = _mr * uy
-		position.Z = _mr * uz
-
-		velocity.X = (mvt*ux + rvdot*vx) * vkmpersec
-		velocity.Y = (mvt*uy + rvdot*vy) * vkmpersec
-		velocity.Z = (mvt*uz + rvdot*vz) * vkmpersec
+		return position, velocity, fmt.Errorf("%w: semilatus rectum is %f", ErrInvalidSemilatusRectum, pl)
 	}
+	rl = am * (1.0 - ecose)
+	rdotl = math.Sqrt(am) * esine / rl
+	rvdotl = math.Sqrt(pl) / rl
+	betal = math.Sqrt(1.0 - el2)
+	temp = esine / (1.0 + betal)
+	sinu = am / rl * (sineo1 - aynl - axnl*temp)
+	cosu = am / rl * (coseo1 - axnl + aynl*temp)
+	su = math.Atan2(sinu, cosu)
+	sin2u = (cosu + cosu) * sinu
+	cos2u = 1.0 - 2.0*sinu*sinu
+	temp = 1.0 / pl
+	temp1 = 0.5 * j2 * temp
+	temp2 = temp1 * temp
+
+	if satrec.method == "d" {
+		cosisq = cosip * cosip
+		satrec.con41 = 3.0*cosisq - 1.0
+		satrec.x1mth2 = 1.0 - cosisq
+		satrec.x7thm1 = 7.0*cosisq - 1.0
+	}
+
+	mrt = rl*(1.0-1.5*temp2*betal*satrec.con41) + 0.5*temp1*satrec.x1mth2*cos2u
+	su = su - 0.25*temp2*satrec.x7thm1*sin2u
+	xnode = nodep + 1.5*temp2*cosip*sin2u
+	xinc = xincp + 1.5*temp2*cosip*sinip*cos2u
+	mvt := rdotl - nm*temp1*satrec.x1mth2*sin2u/xke
+	rvdot = rvdotl + nm*temp1*(satrec.x1mth2*cos2u+1.5*satrec.con41)/xke
+
+	sinsu = math.Sin(su)
+	cossu = math.Cos(su)
+	snod = math.Sin(xnode)
+	cnod = math.Cos(xnode)
+	sini = math.Sin(xinc)
+	cosi = math.Cos(xinc)
+	xmx = -snod * cosi
+	xmy = cnod * cosi
+	ux = xmx*sinsu + cnod*cossu
+	uy = xmy*sinsu + snod*cossu
+	uz = sini * sinsu
+	vx = xmx*cossu - cnod*sinsu
+	vy = xmy*cossu - snod*sinsu
+	vz = sini * cossu
+
+	_mr := mrt * radiusearthkm
+
+	position.X = _mr * ux
+	position.Y = _mr * uy
+	position.Z = _mr * uz
+
+	velocity.X = (mvt*ux + rvdot*vx) * vkmpersec
+	velocity.Y = (mvt*uy + rvdot*vy) * vkmpersec
+	velocity.Z = (mvt*uz + rvdot*vz) * vkmpersec
 
 	if mrt < 1.0 {
-		satrec.Error = 6
-		satrec.ErrorStr = ("mrt is less than 1.0 indicating the satellite has decayed")
+		return position, velocity, fmt.Errorf("%w: mrt is %f", ErrSatelliteDecay, mrt)
 	}
 
-	return
+	return position, velocity, nil
 }
