@@ -31,16 +31,12 @@ type TLE struct {
 }
 
 // Parses a two line element dataset into a Satellite struct
-func ParseTLE(line1, line2 string, gravConst Gravity) (TLE, error) {
+func ParseTLE(line1, line2 string) (TLE, error) {
 	var tle TLE
 	tle.Line1 = line1
 	tle.Line2 = line2
 
 	var err error
-	// sat.gravity, err = getGravConst(gravConst)
-	// if err != nil {
-	// 	return Satellite{}, fmt.Errorf("getGravConst: %w", err)
-	// }
 
 	// LINE 1 BEGIN
 	tle.CatalogNumber = strings.TrimSpace(line1[2:7])
@@ -106,12 +102,13 @@ func ParseTLE(line1, line2 string, gravConst Gravity) (TLE, error) {
 
 // Converts a two line element data set into a Satellite struct and runs sgp4init
 func TLEToSat(line1, line2 string, gravConst Gravity) (Satellite, error) {
-	tle, err := ParseTLE(line1, line2, gravConst)
+	tle, err := ParseTLE(line1, line2)
 	if err != nil {
 		return Satellite{}, fmt.Errorf("could not parse tle: %w", err)
 	}
 
 	var sat Satellite
+	sat.tle = tle
 	sat.gravity, err = getGravConst(gravConst)
 	if err != nil {
 		return Satellite{}, fmt.Errorf("getGravConst: %w", err)

@@ -29,7 +29,6 @@ func TestParseTLE(t *testing.T) {
 			name:        "ISS#25544",
 			line1:       "1 25544U 98067A   08264.51782528 -.00002182  00000-0 -11606-4 0  2927",
 			line2:       "2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.72125391563537",
-			gravConst:   GravityWGS84,
 			expectedErr: nil,
 			satNum:      "25544",
 			epochyr:     8,
@@ -48,7 +47,6 @@ func TestParseTLE(t *testing.T) {
 			name:        "NOAA 19#33591",
 			line1:       "1 33591U 09005A   16163.48990228  .00000077  00000-0  66998-4 0  9990",
 			line2:       "2 33591  99.0394 120.2160 0013054 232.8317 127.1662 14.12079902378332",
-			gravConst:   GravityWGS84,
 			expectedErr: nil,
 			satNum:      "33591",
 			epochyr:     16,
@@ -67,7 +65,6 @@ func TestParseTLE(t *testing.T) {
 			name:        "TITAN 3C#04632",
 			line1:       "1 04632U 70093B   04031.91070959 -.00000084  00000-0  10000-3 0  9955",
 			line2:       "2 04632  11.4628 273.1101 1450506 207.6000 143.9350  1.20231981 44145",
-			gravConst:   GravityWGS84,
 			expectedErr: nil,
 			satNum:      "04632",
 			epochyr:     4,
@@ -86,7 +83,7 @@ func TestParseTLE(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			tle, err := ParseTLE(test.line1, test.line2, test.gravConst)
+			tle, err := ParseTLE(test.line1, test.line2)
 			if err == nil && test.expectedErr != nil {
 				t.Fatalf("expected error %v, got nil", test.expectedErr)
 			}
