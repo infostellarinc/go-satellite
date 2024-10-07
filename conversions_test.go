@@ -52,7 +52,7 @@ func TestECItoLookAngles(t *testing.T) {
 				Altitude:  tt.altitude,
 			}
 
-			lookAngles := ECIToLookAngles(pos, coordinates, jday, sat.gravity)
+			lookAngles := ECIToLookAngles(pos, coordinates, jday, sat.GravityConst)
 
 			if !closeFloat(lookAngles.Azimuth*RAD2DEG, tt.wantAzimuthDegree) {
 				t.Errorf("ECItoLookAngles() Azimuth = %v, want %v", lookAngles.Azimuth*RAD2DEG, tt.wantAzimuthDegree)

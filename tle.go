@@ -147,8 +147,8 @@ func TLEToSat(line1, line2 string, gravConst Gravity) (Satellite, error) {
 	}
 
 	var sat Satellite
-	sat.tle = tle
-	sat.gravity, err = getGravConst(gravConst)
+	sat.Tle = tle
+	sat.GravityConst, err = getGravConst(gravConst)
 	if err != nil {
 		return Satellite{}, fmt.Errorf("getGravConst: %w", err)
 	}

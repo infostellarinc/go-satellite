@@ -2,9 +2,9 @@ package satellite
 
 // Struct for holding satellite information during and before propagation
 type Satellite struct {
-	tle TLE
+	Tle TLE
 
-	gravity GravConst
+	GravityConst GravConst
 
 	epochyr    int64
 	epochdays  float64
