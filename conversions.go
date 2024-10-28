@@ -108,7 +108,7 @@ func ECIToLLA(eciCoords Vector3, gmst float64) (velocity float64, ret Coordinate
 
 	// Oblate Earth Fix
 	c := 0.0
-	for range 20 {
+	for i := 0; i < 20; i++ {
 		c = 1 / math.Sqrt(1-e2*(math.Sin(latitude)*math.Sin(latitude)))
 		latitude = math.Atan2(eciCoords.Z+(a*c*e2*math.Sin(latitude)), sqx2y2)
 	}
