@@ -1,3 +1,3 @@
-module github.com/jamiecrisman/go-satellite
+module github.com/infostellarinc/go-satellite
 
 go 1.21

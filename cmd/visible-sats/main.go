@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jamiecrisman/go-satellite"
+	"github.com/infostellarinc/go-satellite"
 )
 
 type State int

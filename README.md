@@ -1,9 +1,10 @@
 # satellite
-    `go get github.com/jamiecrisman/go-satellite`
+
+> go get github.com/infostellarinc/go-satellite
 
 ## Intro
 
-[![Go](https://github.com/jamiecrisman/go-satellite/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/jamiecrisman/go-satellite/actions/workflows/go.yml) [![GoDoc](https://godoc.org/github.com/jamiecrisman/go-satellite?status.svg)](https://godoc.org/github.com/jamiecrisman/go-satellite)
+[![Go](https://github.com/infostellarinc/go-satellite/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/infostellarinc/go-satellite/actions/workflows/go.yml) [![GoDoc](https://godoc.org/github.com/infostellarinc/go-satellite?status.svg)](https://godoc.org/github.com/infostellarinc/go-satellite)
 
 
 `go-satellite` lets you take a TLE and propagate it to a given time utilizing sgp4. It also lets you calculate the look angles to a satellite from a given location.
